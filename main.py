@@ -67,6 +67,7 @@ def parse_validate_and_clean(csv_name, file_name_column, file_length_column, deb
                 )
                 is_valid = False
                 break
+    # TODO: return error message if there is one
     return is_valid, rows
 
 
@@ -145,6 +146,10 @@ def business_logic(tmpdirname, csv_path):
     os.mkdir(result_folder)
     is_valid, rows = parse_validate_and_clean(csv_path, FILE_NAME_COL, FILE_DURATION_COL, True)
     write_beeps(result_folder, rows, FILE_NAME_COL, FILE_DURATION_COL, True)
+    
+    if not is_valid:
+      # TODO: show an error message
+      return redirect("/")
 
     print(shutil.make_archive(result_folder, 'zip', result_folder))
 

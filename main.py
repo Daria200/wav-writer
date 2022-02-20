@@ -18,8 +18,8 @@ from werkzeug.utils import secure_filename
 UPLOAD_FOLDER = '/tmp'
 ALLOWED_EXTENSIONS = {'csv'}
 
-FILE_NAME_COL = 'File data name ID'
-FILE_DURATION_COL = "JP time (secs)"
+FILE_NAME_COL = 'Name'
+FILE_DURATION_COL = "Duration"
 
 def parse_validate_and_clean(csv_name, file_name_column, file_length_column, debug):
     error_message=''

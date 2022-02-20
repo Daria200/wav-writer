@@ -19,29 +19,26 @@ UPLOAD_FOLDER = '/tmp'
 ALLOWED_EXTENSIONS = {'csv'}
 
 FILE_NAME_COL = 'File data name ID'
-FILE_DURATION_COL = "JP time\n(secs)"
+FILE_DURATION_COL = "JP time (secs)"
 
 def parse_validate_and_clean(csv_name, file_name_column, file_length_column, debug):
+    error_message=''
     is_valid = True
     rows = []
     with open(csv_name) as csvfile:
         reader = csv.DictReader(
             csvfile,
         )
-        row_number = 0
+        row_number = 1
         seen_file_names = set()
         for row in reader:
             row_number += 1
             if not file_name_column in row:
-                print(
-                    f"A column named {file_name_column} does not exist. Please enter a different column name and try again"
-                )
+                error_message+=f'A column named {FILE_NAME_COL} does not exist. Please enter a different column name and try again'
                 is_valid = False
                 break
             if not file_length_column in row:
-                print(
-                    f"A column named {file_length_column} does not exist. Please enter a different column name and try again"
-                )
+                error_message+=f'A column named {FILE_DURATION_COL} does not exist. Please enter a different column name and try again'
                 is_valid = False
                 break
             clean_file_name = row[file_name_column].strip()
@@ -50,9 +47,7 @@ def parse_validate_and_clean(csv_name, file_name_column, file_length_column, deb
                     print(f"Adding {WAV_EXTENSION} to {clean_file_name}")
                 clean_file_name = f"{clean_file_name}{WAV_EXTENSION}"
             if clean_file_name in seen_file_names:
-                print(
-                    f"Row number {row_number} has a duplicate filename, {clean_file_name}. Please rename and try again"
-                )
+                error_message+=f"Row number {row_number} has a duplicate filename, {clean_file_name}. Please rename and try again"
                 is_valid = False
                 break
             seen_file_names.add(clean_file_name)
@@ -62,13 +57,11 @@ def parse_validate_and_clean(csv_name, file_name_column, file_length_column, deb
                 row[file_length_column] = float(row[file_length_column])
                 rows.append(row)
             except:
-                print(
-                    f"Row number {row_number} has an invalid value. Duration column contains {row[file_length_column]}. Please enter a number and try again"
-                )
+                error_message+=f"Row number {row_number} has an invalid value. Duration column contains {row[file_length_column]}. Please enter a number and try again"
                 is_valid = False
                 break
-    # TODO: return error message if there is one
-    return is_valid, rows
+    return is_valid, error_message, rows
+
 
 
 def write_beeps(result_folder, rows, file_name_column, file_length_column, debug):
@@ -144,12 +137,11 @@ def business_logic(tmpdirname, csv_path):
     result_folder = os.path.join(tmpdirname, 'result')
     print(f"result folder: {result_folder}")
     os.mkdir(result_folder)
-    is_valid, rows = parse_validate_and_clean(csv_path, FILE_NAME_COL, FILE_DURATION_COL, True)
+    is_valid, error_message, rows = parse_validate_and_clean(csv_path, FILE_NAME_COL, FILE_DURATION_COL, True)
     write_beeps(result_folder, rows, FILE_NAME_COL, FILE_DURATION_COL, True)
     
     if not is_valid:
-      # TODO: show an error message
-      return redirect("/")
+      return render_template('form.html', error_message=error_message)
 
     print(shutil.make_archive(result_folder, 'zip', result_folder))
 

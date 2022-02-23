@@ -18,10 +18,11 @@ from werkzeug.utils import secure_filename
 UPLOAD_FOLDER = '/tmp'
 ALLOWED_EXTENSIONS = {'csv'}
 
+FILE_NAME_PREFIX= 'Prefix'
 FILE_NAME_COL = 'Name'
 FILE_DURATION_COL = "Duration"
 
-def parse_validate_and_clean(csv_name, file_name_column, file_length_column, debug):
+def parse_validate_and_clean(csv_name, file_name_prefix, file_name_column, file_length_column, debug):
     error_message=''
     is_valid = True
     rows = []
@@ -39,6 +40,10 @@ def parse_validate_and_clean(csv_name, file_name_column, file_length_column, deb
                 break
             if not file_length_column in row:
                 error_message+=f'A column named {FILE_DURATION_COL} does not exist. Please enter a different column name and try again'
+                is_valid = False
+                break
+            if not  file_name_prefix in row:
+                error_message+=f'A column named {FILE_NAME_PREFIX} does not exist. Please enter a different column name and try again'
                 is_valid = False
                 break
             clean_file_name = row[file_name_column].strip()
@@ -64,9 +69,9 @@ def parse_validate_and_clean(csv_name, file_name_column, file_length_column, deb
 
 
 
-def write_beeps(result_folder, rows, file_name_column, file_length_column, debug):
+def write_beeps(result_folder, rows, file_name_prefix, file_name_column, file_length_column, debug):
     for row in rows:
-        file_name = os.path.join(result_folder, row[file_name_column])
+        file_name = os.path.join(result_folder, row[file_name_prefix]+'_'+row[file_name_column])
         duration = row[file_length_column]
         if debug:
             print(f"Creating {file_name} with {duration} second duration")
@@ -137,8 +142,8 @@ def business_logic(tmpdirname, csv_path):
     result_folder = os.path.join(tmpdirname, 'result')
     print(f"result folder: {result_folder}")
     os.mkdir(result_folder)
-    is_valid, error_message, rows = parse_validate_and_clean(csv_path, FILE_NAME_COL, FILE_DURATION_COL, True)
-    write_beeps(result_folder, rows, FILE_NAME_COL, FILE_DURATION_COL, True)
+    is_valid, error_message, rows = parse_validate_and_clean(csv_path, FILE_NAME_PREFIX, FILE_NAME_COL, FILE_DURATION_COL, True)
+    write_beeps(result_folder, rows, FILE_NAME_PREFIX, FILE_NAME_COL, FILE_DURATION_COL, True)
     
     if not is_valid:
       return render_template('form.html', error_message=error_message)
